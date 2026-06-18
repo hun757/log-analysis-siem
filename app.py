@@ -1,14 +1,17 @@
 from collections import Counter
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 import os
-
+from database import init_db, save_alert, get_alert_history, delete_alert
 from parser import parse_auth_log
 from detector import run_detection_rules
+from database import init_db, save_alert, get_alert_history
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = "logs"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+init_db()
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -26,6 +29,10 @@ def dashboard():
     events = parse_auth_log(log_file)
     alerts = run_detection_rules(events)
 
+    if request.method == "POST":
+        for alert in alerts:
+            save_alert(alert)
+
     ip_counts = Counter(event["ip"] for event in events)
     top_ips = ip_counts.most_common(5)
 
@@ -38,6 +45,20 @@ def dashboard():
         top_ips=top_ips
     )
 
+
+@app.route("/history")
+def history():
+    alerts = get_alert_history()
+
+    return render_template(
+        "history.html",
+        alerts=alerts
+    )
+
+@app.route("/delete/<int:alert_id>", methods=["POST"])
+def delete(alert_id):
+    delete_alert(alert_id)
+    return redirect("/history")
 
 if __name__ == "__main__":
     app.run(debug=True)

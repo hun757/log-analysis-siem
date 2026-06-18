@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Alert History</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Alert History</h1>
+
+    <a href="/">Back to Dashboard</a>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Severity</th>
+            <th>Risk Score</th>
+            <th>Type</th>
+            <th>Source IP</th>
+            <th>Message</th>
+            <th>Created At</th>
+             <th>Action</th>
+        </tr>
+
+        {% for alert in alerts %}
+        <tr>
+            <td>{{ alert.id }}</td>
+            <td>{{ alert.severity }}</td>
+            <td>{{ alert.risk_score }}</td>
+            <td>{{ alert.type }}</td>
+            <td>{{ alert.ip }}</td>
+            <td>{{ alert.message }}</td>
+            <td>{{ alert.created_at }}</td>
+             <td>
+            <form method="POST" action="/delete/{{ alert.id }}">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
