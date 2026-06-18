@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mini SIEM Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Mini SIEM Dashboard</h1>
+    <form method="POST" enctype="multipart/form-data">
+    <input type="file" name="logfile">
+    <button type="submit">Analyze Log</button>
+</form>
+
+    <div class="cards">
+        <div class="card">
+            <h2>Total Events</h2>
+            <p>{{ total_events }}</p>
+        </div>
+
+        <div class="card">
+            <h2>Total Alerts</h2>
+            <p>{{ total_alerts }}</p>
+        </div>
+    </div>
+
+    <h2>Alerts</h2>
+
+    {% for alert in alerts %}
+    <div class="alert {{ alert.severity.lower() }}">
+        <strong>{{ alert.severity }}</strong> -
+        Risk Score: {{ alert.risk_score }} -
+        {{ alert.type }} -
+        {{ alert.ip }}
+        <p>{{ alert.message }}</p>
+    </div>
+{% endfor %}
+<h2>Top Source IPs</h2>
+
+<table>
+    <tr>
+        <th>IP Address</th>
+        <th>Event Count</th>
+    </tr>
+
+    {% for ip, count in top_ips %}
+    <tr>
+        <td>{{ ip }}</td>
+        <td>{{ count }}</td>
+    </tr>
+    {% endfor %}
+</table>
+    <h2>Parsed Events</h2>
+
+    <table>
+        <tr>
+            <th>Status</th>
+            <th>User</th>
+            <th>IP</th>
+            <th>Raw Log</th>
+        </tr>
+
+        {% for event in events %}
+        <tr>
+            <td>{{ event.status }}</td>
+            <td>{{ event.user }}</td>
+            <td>{{ event.ip }}</td>
+            <td>{{ event.raw }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
