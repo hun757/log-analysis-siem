@@ -112,3 +112,43 @@ def delete_alert(alert_id):
 
     conn.commit()
     conn.close()
+def search_alerts(severity=None, source_ip=None):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    query = """
+        SELECT id, severity, risk_score, alert_type, source_ip, message, created_at
+        FROM alerts
+        WHERE 1=1
+    """
+
+    params = []
+
+    if severity:
+        query += " AND severity = ?"
+        params.append(severity)
+
+    if source_ip:
+        query += " AND source_ip LIKE ?"
+        params.append(f"%{source_ip}%")
+
+    query += " ORDER BY id DESC"
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    alerts = []
+
+    for row in rows:
+        alerts.append({
+            "id": row[0],
+            "severity": row[1],
+            "risk_score": row[2],
+            "type": row[3],
+            "ip": row[4],
+            "message": row[5],
+            "created_at": row[6]
+        })
+
+    return alerts

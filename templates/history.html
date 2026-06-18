@@ -8,6 +8,23 @@
     <h1>Alert History</h1>
 
     <a href="/">Back to Dashboard</a>
+    <a href="/export">
+    <button type="button">Export CSV</button>
+</a>
+
+    <form method="GET" action="/history">
+    <select name="severity">
+        <option value="">All Severities</option>
+        <option value="LOW" {% if selected_severity == "LOW" %}selected{% endif %}>LOW</option>
+        <option value="MEDIUM" {% if selected_severity == "MEDIUM" %}selected{% endif %}>MEDIUM</option>
+        <option value="HIGH" {% if selected_severity == "HIGH" %}selected{% endif %}>HIGH</option>
+    </select>
+
+    <input type="text" name="source_ip" placeholder="Search IP" value="{{ searched_ip }}">
+
+    <button type="submit">Filter</button>
+</form>
+
 
     <table>
         <tr>
