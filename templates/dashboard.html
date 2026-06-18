@@ -3,6 +3,7 @@
 <head>
     <title>Mini SIEM Dashboard</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>Mini SIEM Dashboard</h1>
@@ -36,7 +37,24 @@
     </div>
 {% endfor %}
 <h2>Top Source IPs</h2>
+<h2>Top Source IP Chart</h2>
 
+<canvas id="ipChart"></canvas>
+
+<script>
+const ctx = document.getElementById('ipChart');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ ip_labels | tojson }},
+        datasets: [{
+            label: 'Event Count',
+            data: {{ ip_values | tojson }}
+        }]
+    }
+});
+</script>
 <table>
     <tr>
         <th>IP Address</th>

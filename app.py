@@ -35,6 +35,8 @@ def dashboard():
 
     ip_counts = Counter(event["ip"] for event in events)
     top_ips = ip_counts.most_common(5)
+    ip_labels = [ip for ip, count in top_ips]
+    ip_values = [count for ip, count in top_ips]
 
     return render_template(
         "dashboard.html",
@@ -42,7 +44,9 @@ def dashboard():
         alerts=alerts,
         total_events=len(events),
         total_alerts=len(alerts),
-        top_ips=top_ips
+        top_ips=top_ips,
+        ip_labels=ip_labels,
+        ip_values=ip_values
     )
 
 
