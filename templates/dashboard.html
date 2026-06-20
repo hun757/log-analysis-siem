@@ -1,91 +1,164 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mini SIEM Dashboard</title>
+    <title>Mini SOC Dashboard</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Mini SIEM Dashboard</h1>
-    <a href="/history">View Alert History</a>
-    <form method="POST" enctype="multipart/form-data">
-    <input type="file" name="logfile">
-    <button type="submit">Analyze Log</button>
-</form>
 
-    <div class="cards">
+<header class="topbar">
+    <div>
+        <h1>Mini SOC Dashboard</h1>
+        <p>Authentication Log Monitoring & Alert Analysis</p>
+    </div>
+
+    <div class="system-status">
+        <span class="status-dot"></span>
+        <span>LIVE</span>
+        <span id="live-clock"></span>
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="summary-grid">
         <div class="card">
-            <h2>Total Events</h2>
-            <p>{{ total_events }}</p>
+            <p>Total Events</p>
+            <h2>{{ total_events }}</h2>
+        </div>
+
+        <div class="card danger">
+            <p>Total Alerts</p>
+            <h2>{{ total_alerts }}</h2>
         </div>
 
         <div class="card">
-            <h2>Total Alerts</h2>
-            <p>{{ total_alerts }}</p>
+            <p>Top Source IP</p>
+            <h2>{{ top_ips[0][0] if top_ips else "N/A" }}</h2>
         </div>
-    </div>
 
-    <h2>Alerts</h2>
+        <div class="card">
+            <p>System Status</p>
+            <h2>Monitoring</h2>
+        </div>
+    </section>
 
-    {% for alert in alerts %}
-    <div class="alert {{ alert.severity.lower() }}">
-        <strong>{{ alert.severity }}</strong> -
-        Risk Score: {{ alert.risk_score }} -
-        {{ alert.type }} -
-        {{ alert.ip }}
-        <p>{{ alert.message }}</p>
-    </div>
-{% endfor %}
-<h2>Top Source IPs</h2>
-<h2>Top Source IP Chart</h2>
+    <section class="control-panel">
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="logfile">
+            <button type="submit">Analyze Log</button>
+        </form>
 
-<canvas id="ipChart"></canvas>
+        <div class="nav-links">
+            <a href="/history">Alert History</a>
+            <a href="/export">Export CSV</a>
+        </div>
+    </section>
+
+    <section class="dashboard-grid">
+        <div class="panel">
+            <h3>Top Source IPs</h3>
+            <canvas id="ipChart"></canvas>
+        </div>
+
+        <div class="panel">
+            <h3>Recent Alerts</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Type</th>
+                        <th>Source IP</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr>
+                        <td>
+                            <span class="badge {{ alert.severity | lower }}">
+                                {{ alert.severity }}
+                            </span>
+                        </td>
+                        <td>{{ alert.type }}</td>
+                        <td>{{ alert.ip }}</td>
+                        <td>{{ alert.message }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
 
 <script>
-const ctx = document.getElementById('ipChart');
+function updateClock() {
+    const now = new Date();
 
-new Chart(ctx, {
-    type: 'bar',
+    const timeString = now.toLocaleString("en-AU", {
+        timeZone: "Australia/Sydney",
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+
+    document.getElementById("live-clock").textContent = timeString;
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+const ipLabels = {{ ip_labels | tojson }};
+const ipValues = {{ ip_values | tojson }};
+
+new Chart(document.getElementById("ipChart"), {
+    type: "bar",
     data: {
-        labels: {{ ip_labels | tojson }},
+        labels: ipLabels,
         datasets: [{
-            label: 'Event Count',
-            data: {{ ip_values | tojson }}
+            label: "Event Count",
+            data: ipValues,
+            backgroundColor: "rgba(56, 189, 248, 0.7)",
+            borderColor: "rgba(56, 189, 248, 1)",
+            borderWidth: 1
         }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: "#dbeafe"
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: "#cbd5e1"
+                },
+                grid: {
+                    color: "rgba(148, 163, 184, 0.1)"
+                }
+            },
+            y: {
+                ticks: {
+                    color: "#cbd5e1"
+                },
+                grid: {
+                    color: "rgba(148, 163, 184, 0.1)"
+                }
+            }
+        }
     }
 });
 </script>
-<table>
-    <tr>
-        <th>IP Address</th>
-        <th>Event Count</th>
-    </tr>
 
-    {% for ip, count in top_ips %}
-    <tr>
-        <td>{{ ip }}</td>
-        <td>{{ count }}</td>
-    </tr>
-    {% endfor %}
-</table>
-    <h2>Parsed Events</h2>
-
-    <table>
-        <tr>
-            <th>Status</th>
-            <th>User</th>
-            <th>IP</th>
-            <th>Raw Log</th>
-        </tr>
-
-        {% for event in events %}
-        <tr>
-            <td>{{ event.status }}</td>
-            <td>{{ event.user }}</td>
-            <td>{{ event.ip }}</td>
-            <td>{{ event.raw }}</td>
-        </tr>
-        {% endfor %}
-    </table>
 </body>
 </html>
