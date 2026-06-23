@@ -1,36 +1,36 @@
-import time
+import subprocess
 from parser import parse_auth_log_line
 from detector import run_detection_rules_for_event
 from database import save_alert
 
 
-LOG_PATH = "/var/log/auth.log"
+def monitor_journal():
+    print("[+] Monitoring started: journalctl -f")
 
+    process = subprocess.Popen(
+        ["journalctl", "-f", "-n", "0"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
 
-def monitor_log():
-    print(f"[+] Monitoring started: {LOG_PATH}")
+    for line in process.stdout:
+        line = line.strip()
 
-    with open(LOG_PATH, "r", encoding="utf-8", errors="ignore") as file:
-        file.seek(0, 2)
+        if not line:
+            continue
 
-        while True:
-            line = file.readline()
+        print("[LOG]", line)
 
-            if not line:
-                time.sleep(1)
-                continue
+        event = parse_auth_log_line(line)
 
-            print("[LOG]", line.strip())
+        if event:
+            alerts = run_detection_rules_for_event(event)
 
-            event = parse_auth_log_line(line)
-
-            if event:
-                alerts = run_detection_rules_for_event(event)
-
-                for alert in alerts:
-                    save_alert(alert)
-                    print("[ALERT]", alert["type"], alert["severity"])
+            for alert in alerts:
+                save_alert(alert)
+                print("[ALERT]", alert["type"], alert["severity"])
 
 
 if __name__ == "__main__":
-    monitor_log()
+    monitor_journal()
