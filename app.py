@@ -18,7 +18,8 @@ init_db()
 
 @app.route("/", methods=["GET", "POST"])
 def dashboard():
-    log_file = "logs/sample_auth.log"
+    events = []
+    alerts = []
 
     if request.method == "POST":
         uploaded_file = request.files.get("logfile")
@@ -26,14 +27,12 @@ def dashboard():
         if uploaded_file and uploaded_file.filename:
             file_path = os.path.join(app.config["UPLOAD_FOLDER"], uploaded_file.filename)
             uploaded_file.save(file_path)
-            log_file = file_path
 
-    events = parse_auth_log(log_file)
-    alerts = run_detection_rules(events)
+            events = parse_auth_log(file_path)
+            alerts = run_detection_rules(events)
 
-    if request.method == "POST":
-        for alert in alerts:
-            save_alert(alert)
+            for alert in alerts:
+                save_alert(alert)
 
     ip_counts = Counter(event["ip"] for event in events)
     top_ips = ip_counts.most_common(5)

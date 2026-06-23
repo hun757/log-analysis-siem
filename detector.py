@@ -1,5 +1,8 @@
 from collections import Counter
+from collections import Counter, defaultdict, deque
+import time
 
+failed_login_tracker = defaultdict(deque)
 
 def detect_brute_force(events):
     alerts = []
@@ -53,19 +56,36 @@ def run_detection_rules_for_event(event):
     alerts = []
 
     if event["type"] == "FAILED_LOGIN":
-        alerts.append({
-            "severity": "MEDIUM",
-            "risk_score": 50,
-            "type": "Failed Login",
-            "ip": event.get("ip", "Unknown"),
-            "message": event["message"]
-        })
+        ip = event.get("ip", "Unknown")
+        now = time.time()
+
+        failed_login_tracker[ip].append(now)
+
+        while failed_login_tracker[ip] and now - failed_login_tracker[ip][0] > 300:
+            failed_login_tracker[ip].popleft()
+
+        if len(failed_login_tracker[ip]) >= 5:
+            alerts.append({
+                "severity": "CRITICAL",
+                "risk_score": 95,
+                "type": "Brute Force Attack",
+                "ip": ip,
+                "message": f"{ip} made {len(failed_login_tracker[ip])} failed SSH login attempts within 5 minutes."
+            })
+        else:
+            alerts.append({
+                "severity": "MEDIUM",
+                "risk_score": 50,
+                "type": "Failed SSH Login",
+                "ip": ip,
+                "message": event["message"]
+            })
 
     elif event["type"] == "SUCCESS_LOGIN":
         alerts.append({
             "severity": "LOW",
             "risk_score": 20,
-            "type": "Successful Login",
+            "type": "Successful SSH Login",
             "ip": event.get("ip", "Unknown"),
             "message": event["message"]
         })
