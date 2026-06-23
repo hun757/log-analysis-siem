@@ -36,7 +36,7 @@ def parse_auth_log_line(line):
         "message": line.strip()
     }
 
-    ip_match = re.search(r"from (\d+\.\d+\.\d+\.\d+)", line)
+    ip_match = re.search(r"from ([0-9a-fA-F:\.]+)", line)
     if ip_match:
         event["ip"] = ip_match.group(1)
 
