@@ -33,6 +33,8 @@ def dashboard():
 
             for alert in alerts:
                 save_alert(alert)
+    
+    recent_alerts = get_alert_history()[:5]
 
     ip_counts = Counter(event["ip"] for event in events)
     top_ips = ip_counts.most_common(5)
@@ -43,11 +45,13 @@ def dashboard():
         "dashboard.html",
         events=events,
         alerts=alerts,
+        recent_alerts=recent_alerts,
         total_events=len(events),
         total_alerts=len(alerts),
         top_ips=top_ips,
         ip_labels=ip_labels,
         ip_values=ip_values
+        
     )
 
 
