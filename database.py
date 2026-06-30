@@ -1,9 +1,11 @@
 import sqlite3
 from datetime import datetime
 
+# SQLite database file
 DB_NAME = "siem.db"
 
 
+# Create the alerts table if it does not exist
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -24,6 +26,7 @@ def init_db():
     conn.close()
 
 
+# Check whether the alert already exists
 def alert_exists(alert):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -47,6 +50,8 @@ def alert_exists(alert):
     return result is not None
 
 
+# Save a new alert to the database
+# Duplicate alerts are ignored
 def save_alert(alert):
     if alert_exists(alert):
         return
@@ -77,6 +82,8 @@ def save_alert(alert):
     conn.close()
 
 
+# Retrieve all stored alerts
+# Latest alerts are returned first
 def get_alert_history():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -92,6 +99,7 @@ def get_alert_history():
 
     alerts = []
 
+    # Convert database rows into dictionaries
     for row in rows:
         alerts.append({
             "id": row[0],
@@ -104,6 +112,9 @@ def get_alert_history():
         })
 
     return alerts
+
+
+# Delete an alert by its ID
 def delete_alert(alert_id):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -112,6 +123,9 @@ def delete_alert(alert_id):
 
     conn.commit()
     conn.close()
+
+
+# Search alerts using severity and/or source IP
 def search_alerts(severity=None, source_ip=None):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -124,10 +138,12 @@ def search_alerts(severity=None, source_ip=None):
 
     params = []
 
+    # Apply severity filter
     if severity:
         query += " AND severity = ?"
         params.append(severity)
 
+    # Apply source IP filter
     if source_ip:
         query += " AND source_ip LIKE ?"
         params.append(f"%{source_ip}%")
@@ -140,6 +156,7 @@ def search_alerts(severity=None, source_ip=None):
 
     alerts = []
 
+    # Convert database rows into dictionaries
     for row in rows:
         alerts.append({
             "id": row[0],
@@ -152,3 +169,4 @@ def search_alerts(severity=None, source_ip=None):
         })
 
     return alerts
+
