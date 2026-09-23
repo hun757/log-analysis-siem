@@ -15,6 +15,8 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "logs"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# Create the logs directory if it does not exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Initialize the SQLite database
 init_db()
 
